@@ -3,7 +3,7 @@
 ## ✅ Everything is on GitHub!
 
 **Repository:** `YishuGudd/in-hackathon2025-ai-agent-genai-notification`  
-**Branch:** `yishutest`  
+**Branch:** `master` (default)  
 **Status:** ✅ Pushed and ready to share
 
 ---
@@ -17,17 +17,12 @@ Send your teammates this link:
 https://github.com/YishuGudd/in-hackathon2025-ai-agent-genai-notification
 ```
 
-Or share the branch directly:
-```
-https://github.com/YishuGudd/in-hackathon2025-ai-agent-genai-notification/tree/yishutest
-```
-
 ### Step 2: They Clone the Repository
 
 ```bash
 git clone https://github.com/YishuGudd/in-hackathon2025-ai-agent-genai-notification.git
 cd in-hackathon2025-ai-agent-genai-notification
-git checkout yishutest  # Switch to your branch
+# Already on master branch - ready to use!
 ```
 
 ### Step 3: They Configure Snowflake
@@ -220,7 +215,7 @@ Just share the GitHub link and they're good to go!
 ---
 
 **GitHub URL to share:**  
-`https://github.com/YishuGudd/in-hackathon2025-ai-agent-genai-notification/tree/yishutest`
+`https://github.com/YishuGudd/in-hackathon2025-ai-agent-genai-notification`
 
 **Copy the message template above and send it to your team!** 🚀
 
