@@ -1,7 +1,7 @@
 """
 DoorDash Notification Generator Module
 
-Version: 1.2.0 - Added pricing filter and smart deal targeting
+Version: 1.3.0 - Added locale-aware copy helpers (es, fr-CA, en-CA)
 """
 
 import json
@@ -17,9 +17,10 @@ class NotificationGenerator:
     - v1.0: Initial release with dietary guardrails
     - v1.1: Added mild spicy guardrail
     - v1.2: Added pricing filter for smart deal targeting
+    - v1.3: Added locale-aware copy helpers (Spanish, French-CA, English-CA)
     """
     
-    __version__ = "1.2.0"
+    __version__ = "1.3.0"
     
     def __init__(self):
         self.brand_phrases = [
@@ -29,6 +30,132 @@ class NotificationGenerator:
             "Your go-tos are here",
             "More you time",
         ]
+
+        # Title translations by locale key
+        self.title_translations = {
+            "es": {
+                "Noodle cravings covered": "Antojo de fideos, listo",
+                "Deal dropped. You're up": "Bajó la oferta. Es tu turno",
+                "Skip the schlep": "Evita el viaje",
+                "You pick. We roll": "Tú eliges. Nosotros llevamos",
+                "Your go-tos are here": "Tus favoritos están aquí",
+                "Heat seekers wanted": "Para amantes del picante",
+                "Pizza. Done": "Pizza. Listo",
+                "Burgers your way": "Hamburguesas a tu modo",
+                "Sushi and ramen ready": "Sushi y ramen listos",
+                "Curry cravings": "Antojo de curry",
+                "Pho and more": "Pho y más",
+                "Curry and more": "Curry y más",
+                "Korean favorites nearby": "Favoritos coreanos cerca",
+                "Mediterranean picks": "Opciones mediterráneas",
+                "Fresh bowls nearby": "Bowls frescos cerca",
+                "Taco time": "Hora de tacos",
+                "$0 delivery fee": "Envío a $0",
+            },
+            "fr-CA": {
+                "Noodle cravings covered": "Envie de nouilles? On livre",
+                "Deal dropped. You're up": "Promo en cours. À toi",
+                "Skip the schlep": "Évite le déplacement",
+                "You pick. We roll": "Tu choisis. On s’en charge",
+                "Your go-tos are here": "Tes favoris sont là",
+                "Heat seekers wanted": "Pour amateurs de piquant",
+                "Pizza. Done": "Pizza. C’est fait",
+                "Burgers your way": "Burgers à ta façon",
+                "Sushi and ramen ready": "Sushi et ramen prêts",
+                "Curry cravings": "Envie de curry",
+                "Pho and more": "Pho et plus",
+                "Curry and more": "Curry et plus",
+                "Korean favorites nearby": "Classiques coréens près de toi",
+                "Mediterranean picks": "Sélections méditerranéennes",
+                "Fresh bowls nearby": "Bols frais près de toi",
+                "Taco time": "Heure des tacos",
+                "$0 delivery fee": "Frais de livraison 0 $",
+            },
+        }
+
+        # Body translations for common templates
+        self.body_translations = {
+            "es": {
+                "🍜 Hot bowls and hand-pulled options ready from spots you'll love": "🍜 Tazones calientes y fideos a mano de lugares que te encantarán",
+                "Get dumplings, rice dishes, and bold flavors delivered from top spots": "Dumplings, platos de arroz y sabores intensos de los mejores lugares",
+                "Build your perfect bowl with fresh ingredients from places nearby": "Arma tu bowl perfecto con ingredientes frescos cerca de ti",
+                "Get bold flavors from restaurants that bring it": "Sabores intensos de restaurantes que lo dan todo",
+                "Fresh tacos, burritos, and more ready to order from nearby favorites": "Tacos, burritos y más listos para ordenar de favoritos cercanos",
+                "Thin crust to deep dish, they're all just a tap away": "De masa fina a deep dish, a un toque",
+                "Classic or loaded, get them delivered hot and ready": "Clásicas o cargadas, llegan calientes y listas",
+                "Fresh rolls and rich broths from spots you'll want to reorder": "Rollos frescos y caldos intensos de lugares para repetir",
+                "Get bold Thai curries and stir-fries delivered in 30 min": "Curries y salteados tailandeses en 30 min",
+                "Fresh Vietnamese flavors from noodle soups to banh mi sandwiches": "Sabores vietnamitas: sopas de fideos y banh mi",
+                "Bold Indian flavors from tikka masala to biryani, all nearby": "Sabores indios: tikka masala, biryani y más",
+                "From bibimbap to Korean fried chicken, flavors you'll love": "De bibimbap a pollo frito coreano, sabores que amarás",
+                "Fresh gyros, falafel, and hummus from spots worth reordering": "Gyros, falafel y hummus de lugares que valen repetir",
+                "Build your perfect meal with options that keep it light": "Arma tu comida ligera con opciones frescas",
+                "Save on restaurants you order from most with deals ready now": "Ahorra en tus restaurantes de siempre con ofertas listas ahora",
+                "Skip the fee on orders from top-rated spots near you": "Evita la tarifa en lugares mejor calificados cerca",
+                "Get savings on restaurants you visit most": "Ahorra en los restaurantes que más visitas",
+                "Reorder favorites or find something new worth trying": "Repite favoritos o descubre algo nuevo",
+            },
+            "fr-CA": {
+                "🍜 Hot bowls and hand-pulled options ready from spots you'll love": "🍜 Bols chauds et nouilles maison de restos que tu vas adorer",
+                "Get dumplings, rice dishes, and bold flavors delivered from top spots": "Dumplings, plats de riz et saveurs audacieuses des meilleurs restos",
+                "Build your perfect bowl with fresh ingredients from places nearby": "Compose ton bol parfait avec des ingrédients frais tout près",
+                "Get bold flavors from restaurants that bring it": "Saveurs audacieuses de restos qui livrent la dose",
+                "Fresh tacos, burritos, and more ready to order from nearby favorites": "Tacos, burritos et plus, prêts à commander des favoris près de toi",
+                "Thin crust to deep dish, they're all just a tap away": "De mince à épaisse, à un seul geste",
+                "Classic or loaded, get them delivered hot and ready": "Classiques ou chargés, livrés chauds et prêts",
+                "Fresh rolls and rich broths from spots you'll want to reorder": "Rouleaux frais et bouillons riches de restos à recommander",
+                "Get bold Thai curries and stir-fries delivered in 30 min": "Currys et sautés thaïs en 30 min",
+                "Fresh Vietnamese flavors from noodle soups to banh mi sandwiches": "Saveurs vietnamiennes: soupes de nouilles et banh mi",
+                "Bold Indian flavors from tikka masala to biryani, all nearby": "Saveurs indiennes: tikka masala, biryani et plus",
+                "From bibimbap to Korean fried chicken, flavors you'll love": "De bibimbap au poulet frit coréen, saveurs à aimer",
+                "Fresh gyros, falafel, and hummus from spots worth reordering": "Gyros, falafels, houmous de restos à recommander",
+                "Build your perfect meal with options that keep it light": "Compose un repas léger avec des options fraîches",
+                "Save on restaurants you order from most with deals ready now": "Économise sur tes restos habituels avec des promos prêtes maintenant",
+                "Skip the fee on orders from top-rated spots near you": "Zéro frais de livraison sur des restos bien cotés près de toi",
+                "Get savings on restaurants you visit most": "Économies sur les restos que tu visites le plus",
+                "Reorder favorites or find something new worth trying": "Recommande tes favoris ou essaie quelque chose de nouveau",
+            },
+        }
+
+    def _detect_locale_key(self, dd_user_locale: str, language: str) -> str:
+        """Return canonical locale key: 'es', 'fr-CA', 'en-CA', or 'en-US' default."""
+        loc = (dd_user_locale or "").lower()
+        lang = (language or "").lower()
+
+        if loc.startswith("es") or lang.startswith("es"):
+            return "es"
+        if loc.startswith("fr") or lang.startswith("fr"):
+            return "fr-CA"
+        if loc == "en-ca" or lang == "en-ca":
+            return "en-CA"
+        return "en-US"
+
+    def localize_copy(self, title: str, body: str, dd_user_locale: str = "", language: str = "") -> Dict[str, str]:
+        """
+        Localize a title/body pair for supported locales while respecting length limits.
+        Returns a dict with 'title', 'body', and 'locale_applied'.
+        """
+        locale_key = self._detect_locale_key(dd_user_locale, language)
+
+        if locale_key == "en-CA":
+            body_ca = body
+            body_ca = body_ca.replace("favorites", "favourites").replace("flavors", "flavours")
+            title_ca = title
+            return {"title": title_ca, "body": body_ca, "locale_applied": locale_key}
+
+        translations_t = self.title_translations.get(locale_key, {})
+        translations_b = self.body_translations.get(locale_key, {})
+
+        localized_title = translations_t.get(title, title)
+        localized_body = translations_b.get(body, body)
+
+        # Enforce hard limits
+        if len(localized_title) >= 35:
+            localized_title = localized_title[:34]
+        if len(localized_body) > 140:
+            localized_body = localized_body[:140]
+
+        return {"title": localized_title, "body": localized_body, "locale_applied": locale_key}
     
     def extract_promo_usage(self, price_sensitivity: str) -> float:
         """Extract promo usage percentage from price_sensitivity field"""
