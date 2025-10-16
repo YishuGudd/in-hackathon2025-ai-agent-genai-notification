@@ -1,8 +1,10 @@
 """
-DoorDash Notification Generator Module
+DoorDash Notification Generator Module - UPDATED
 
 Reusable module for generating personalized push notifications
 following DoorDash brand guidelines and dietary restrictions.
+
+Version: 1.1 - Added mild spicy guardrail and deals filter
 """
 
 import json
@@ -13,12 +15,12 @@ class NotificationGenerator:
     """
     Generate personalized push notifications for DoorDash consumers.
     
-    This class encapsulates:
-    - DoorDash brand voice guidelines
-    - Format restrictions (title < 35 chars, body ≤ 140 chars)
-    - Dietary preference guardrails
-    - Scoring logic based on profile match quality
+    Version 1.1 Updates:
+    - Added mild spicy guardrail (filters 'spicy' for 'mild spicy' taste profiles)
+    - Updated URLs to include &filterQuery-deals-fill=true
     """
+    
+    __version__ = "1.1.0"
     
     def __init__(self):
         self.brand_phrases = [
@@ -30,16 +32,7 @@ class NotificationGenerator:
         ]
     
     def passes_dietary_guardrail(self, notification: Dict, dietary_pref: str) -> bool:
-        """
-        Check if a notification respects dietary preferences.
-        
-        Args:
-            notification: Dict with 'title', 'body', 'keyword'
-            dietary_pref: Consumer's preferred dietary preference string
-            
-        Returns:
-            True if notification passes dietary check, False otherwise
-        """
+        """Check if a notification respects dietary preferences."""
         if not dietary_pref or dietary_pref.lower() in ['none', 'no preference']:
             return True
         
@@ -66,17 +59,30 @@ class NotificationGenerator:
         
         return True
     
-    def validate_notification(self, title: str, body: str) -> Dict:
+    def passes_mild_spicy_guardrail(self, notification: Dict, taste_pref: str) -> bool:
         """
-        Validate a notification against DoorDash guidelines.
+        NEW v1.1: If taste preference contains 'mild spicy', filter out 'spicy' keyword.
         
-        Args:
-            title: Notification title
-            body: Notification body
-            
-        Returns:
-            Dict with validation results and any issues found
+        Per updated restriction: "If cx profile contains 'mild spicy' taste, 
+        do not recommend 'spicy' keyword"
         """
+        if not taste_pref:
+            return True
+        
+        taste_lower = taste_pref.lower()
+        
+        # Check if profile has "mild spicy" (mild AND spicy together)
+        if 'mild' in taste_lower and 'spicy' in taste_lower:
+            content = f"{notification['title']} {notification['body']} {notification['keyword']}".lower()
+            
+            # Filter out anything with 'spicy'
+            if 'spicy' in content:
+                return False
+        
+        return True
+    
+    def validate_notification(self, title: str, body: str) -> Dict:
+        """Validate a notification against DoorDash guidelines."""
         issues = []
         
         # Format validation
@@ -122,17 +128,7 @@ class NotificationGenerator:
         min_score: int = 80,
         max_count: int = 10
     ) -> List[Dict]:
-        """
-        Generate personalized notifications from a consumer profile.
-        
-        Args:
-            profile: Consumer profile dict from GenAI table
-            min_score: Minimum quality score threshold (default: 80)
-            max_count: Maximum notifications to return (default: 10)
-            
-        Returns:
-            List of notification dicts with title, body, keyword, score
-        """
+        """Generate personalized notifications from a consumer profile."""
         overall = profile.get('overall_profile', {})
         cuisine = overall.get('cuisine_preferences', '').lower()
         food = overall.get('food_preferences', '').lower()
@@ -147,11 +143,18 @@ class NotificationGenerator:
         self._add_cuisine_notifications(all_notifications, cuisine, food, taste)
         self._add_universal_notifications(all_notifications)
         
-        # Apply dietary guardrails
-        filtered = [
-            n for n in all_notifications 
-            if self.passes_dietary_guardrail(n, preferred_dietary)
-        ]
+        # Apply guardrails in order
+        filtered = []
+        for notif in all_notifications:
+            # 1. Dietary guardrail
+            if not self.passes_dietary_guardrail(notif, preferred_dietary):
+                continue
+            
+            # 2. NEW v1.1: Mild spicy guardrail
+            if not self.passes_mild_spicy_guardrail(notif, taste):
+                continue
+            
+            filtered.append(notif)
         
         # Filter by score and sort
         filtered = [n for n in filtered if n['score'] >= min_score]
@@ -191,7 +194,7 @@ class NotificationGenerator:
         if 'spicy' in taste or 'bold' in taste:
             notifications.append({
                 "title": "Heat seekers wanted",
-                "body": "Get bold, spicy flavors from restaurants that bring it",
+                "body": "Get bold flavors from restaurants that bring it",
                 "keyword": "spicy food",
                 "score": 92
             })
@@ -286,7 +289,10 @@ class NotificationGenerator:
         })
     
     def format_for_doordash_url(self, keyword: str) -> str:
-        """Generate DoorDash search URL from keyword"""
+        """
+        Generate DoorDash search URL from keyword.
+        
+        Version 1.1: Now includes deals filter parameter
+        """
         encoded_keyword = keyword.replace(' ', '%20')
-        return f"https://www.doordash.com/search/store/{encoded_keyword}?event_type=search&filterQuery-vertical_ids=1"
-
+        return f"https://www.doordash.com/search/store/{encoded_keyword}?event_type=search&filterQuery-vertical_ids=1&filterQuery-deals-fill=true"

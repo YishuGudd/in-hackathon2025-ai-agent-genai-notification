@@ -30,6 +30,8 @@ Content Restrictions:
     Use the description only to understand the restaurant's context.
 * Do not describe the restaurant, cuisine, or items as "authentic"
 * You may get "campaign information". If you get campaign information, you should use it as context to generate the content. If you don't get campaign information, you should ignore it.
+* If cx profile contains 'mild spicy' taste, do not recommend 'spicy' keyword
+
 
 
 gCx CopyGPT Training File | Updated 9.22
