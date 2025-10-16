@@ -49,3 +49,14 @@ Thumbs.db
 !config.json
 *.parquet
 
+
+# Notification Generator - Don't commit sensitive data
+.env
+*.pyc
+__pycache__/
+.venv/
+*.log
+
+# Don't commit large generated files (optional)
+# Uncomment if you don't want to track generated CSVs:
+# examples/notifications_*.csv

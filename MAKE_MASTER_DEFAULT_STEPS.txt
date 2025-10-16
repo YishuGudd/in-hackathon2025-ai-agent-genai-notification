@@ -1,0 +1,84 @@
+================================================================================
+📌 HOW TO MAKE MASTER THE DEFAULT BRANCH ON GITHUB
+================================================================================
+
+Current situation:
+✓ Master branch has all notification generator code
+✓ Master is ahead of yishutest by 2 commits
+✗ GitHub still shows yishutest as default
+
+Follow these steps to fix:
+
+================================================================================
+STEP-BY-STEP INSTRUCTIONS
+================================================================================
+
+1. Open your web browser and go to:
+   https://github.com/YishuGudd/in-hackathon2025-ai-agent-genai-notification
+
+2. Click "Settings" tab
+   (It's in the top navigation, to the right of "Insights")
+
+3. In the left sidebar, click "General"
+   (Should already be selected by default)
+
+4. Scroll down to find "Default branch" section
+   (It's near the top of the page)
+
+5. You'll see something like:
+   "The default branch is yishutest"
+   
+6. Click the switch icon (⇄) or pencil icon (✏️) next to "yishutest"
+
+7. A dropdown will appear - select "master"
+
+8. Click "Update" button
+
+9. Confirm by clicking "I understand, update the default branch"
+
+10. Done! ✅
+
+================================================================================
+VERIFY IT WORKED
+================================================================================
+
+After changing:
+
+1. Go back to your repository homepage:
+   https://github.com/YishuGudd/in-hackathon2025-ai-agent-genai-notification
+
+2. You should see "master" shown as the branch (not "yishutest")
+
+3. The branch dropdown should show "master" by default
+
+================================================================================
+THEN SHARE WITH YOUR TEAM
+================================================================================
+
+Once master is the default, share this link:
+
+https://github.com/YishuGudd/in-hackathon2025-ai-agent-genai-notification
+
+Your teammates will automatically get the master branch when they clone!
+
+git clone https://github.com/YishuGudd/in-hackathon2025-ai-agent-genai-notification.git
+cd in-hackathon2025-ai-agent-genai-notification
+# Automatically on master branch!
+
+================================================================================
+OPTIONAL: CLEAN UP OLD BRANCHES
+================================================================================
+
+After master is the default, you can delete the old branches:
+
+# Delete yishutest (locally and remotely)
+git push origin --delete yishutest
+git branch -d yishutest
+
+# Delete main (locally and remotely)
+git push origin --delete main
+git branch -d main
+
+This keeps your repository clean with just the master branch.
+
+================================================================================

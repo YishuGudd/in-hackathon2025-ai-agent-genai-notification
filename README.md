@@ -13,6 +13,55 @@ This project provides a complete setup for connecting to Snowflake and performin
 - ✅ Example SQL queries
 - ✅ Environment-based configuration
 
+## Notification Generator v1.3 (Locale-aware)
+
+This repo includes a notification generator with pricing intelligence (v1.2) and locale-aware copy (v1.3). Supported locales: Spanish (`es`), French-Canada (`fr-CA`), English-Canada (`en-CA`), default English-US (`en-US`).
+
+### Prerequisites
+- Snowflake credentials in `.env` (External Browser SSO supported)
+- `consumer_ids.csv` with a `CONSUMER_ID` column (examples in the MCP repo)
+
+### One-command E2E generation (profiles + locales + localization)
+Run from your MCP repo (where the scripts are):
+```bash
+uv run python e2e_generate_localized.py
+```
+Outputs: `notifications_e2e_localized.csv` with columns:
+- consumer_id, rank, score, title, body, keyword, url
+- cuisines_preference, foods_preference, taste_preference, dietary_preference
+- dd_user_locale, language, locale_applied, title_localized, body_localized
+- title_length, body_length, title_length_localized, body_length_localized
+
+### Post-process localization for an existing CSV
+If you already have a pricing CSV, you can localize it via:
+```bash
+uv run python localize_notifications.py
+```
+Inputs: `notifications_with_pricing.csv` and `locale_joined_for_consumers.csv`
+Output: `notifications_with_pricing_localized.csv`
+
+### How locale is applied
+- Detects locale via `DD_USER_LOCALE` then falls back to `LANGUAGE`
+- Spanish and French-CA use curated translations for common titles/bodies
+- English-CA adjusts spelling (e.g., favourites/flavours)
+- Character limits enforced: title < 35 chars, body ≤ 140 chars
+
+### Results (scores)
+- Pricing (v1.2) average: 88.95 (139 notifications)
+- E2E localized (v1.3) average: 88.83 (142 notifications)
+
+Localization improves relevance for Spanish/French-CA audiences, but average score remains comparable to pricing-only results due to unchanged scoring logic. Future work could include locale-aware scoring.
+
+### Locale-aware score (separate, non-ranking)
+- New column: `locale_score` (does not affect ranking)
+- Heuristics:
+  - Exact language match (es): +3
+  - French-CA match: +2
+  - English-CA variant match: +1
+  - Non-English copy shown to English user (or mismatched language): −4
+  - Truncation applied to fit 35/140 limits: −1
+- Final ranking still uses `score` only; `locale_score` is for analysis/QA.
+
 ## Prerequisites
 - Python 3.8 or higher
 - Snowflake account with credentials

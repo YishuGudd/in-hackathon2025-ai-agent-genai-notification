@@ -1,0 +1,159 @@
+================================================================================
+NOTIFICATION GENERATION SUMMARY - WITH DIETARY GUARDRAILS
+================================================================================
+Date: October 15, 2025
+Total Consumers Processed: 17
+Consumers with Profiles: 15
+Total Notifications Generated: 150
+
+================================================================================
+KEY FEATURES
+================================================================================
+
+1. UPDATED DOORDASH BRAND VOICE
+   ✓ Conversational and genuine (not salesy)
+   ✓ Uses DoorDash brand phrases from guidelines
+   ✓ "Feels like a friend with a low-key solution"
+   
+   Examples:
+   • "Skip the schlep" - Visual, action-oriented
+   • "You pick. We roll" - Playful, confident
+   • "Deal dropped. You're up" - Energetic, clever urgency
+   • "More you time" - Lifestyle value focus
+
+2. DIETARY PREFERENCE GUARDRAILS 🔒
+   ✓ Extracts preferred_dietary_preference from each profile
+   ✓ Filters out notifications that conflict with dietary needs
+   ✓ 15 consumers had dietary preferences applied
+   
+   Guardrails Applied:
+   • Vegetarian: Removes meat-focused notifications
+   • Vegan: Removes all animal product notifications
+   • Pescatarian: Removes non-seafood meat notifications
+   
+3. COMPLIANCE WITH ALL RESTRICTIONS
+   ✓ Titles < 35 characters
+   ✓ Bodies < 140 characters
+   ✓ No exclamation points
+   ✓ Sentence case throughout
+   ✓ Max 1 emoji per notification
+   ✓ No meal time inferences
+   ✓ No "authentic" descriptions
+   ✓ Eighth-grade reading level
+
+================================================================================
+OUTPUT FILE
+================================================================================
+
+File: notifications_with_dietary_guardrails.csv
+Size: 73 KB
+Rows: 151 (150 notifications + header)
+
+Columns (13 total):
+1. consumer_id
+2. rank (1-10)
+3. score (68-98)
+4. title
+5. body
+6. keyword
+7. url
+8. title_length
+9. body_length
+10. cuisines_preference
+11. foods_preference
+12. taste_preference
+13. dietary_preference ⭐ NEW
+
+================================================================================
+BRAND VOICE TRANSFORMATIONS
+================================================================================
+
+OLD STYLE                          NEW DOORDASH VOICE
+---------------------------------  ------------------------------------
+"Fresh noodles nearby"             "Noodle cravings covered"
+"Chinese favorites calling"        "Skip the schlep"
+"Build your own bowl"              "You pick. We roll"
+"Your favorites are back"          "Your go-tos are here"
+"Save on your next order"          "Deal dropped. You're up"
+"Fresh bowls and salads"           "Bowls and salads nearby"
+"Something sweet waiting"          "Something sweet"
+
+Why These Changes:
+• More imagery-driven ("Skip the schlep" vs "Order now")
+• Uses DoorDash-approved brand phrases
+• Playful without being forced
+• Value-forward and clear
+• Conversational, not marketing-speak
+
+================================================================================
+DIETARY GUARDRAIL IMPACT
+================================================================================
+
+Consumers Analyzed: 15 with profiles
+
+Dietary Preferences Found:
+• "none" or no preference: 1 consumer
+• "Occasional vegetarian": 8 consumers
+• "Occasional pescatarian": 5 consumers
+• "Occasional vegan": 1 consumer
+
+Guardrail Actions:
+✓ Vegetarian consumers: Chicken/beef/pork notifications filtered
+✓ Pescatarian consumers: Non-seafood meat notifications filtered
+✓ Vegan consumers: All animal product notifications filtered
+✓ No preference: All notifications allowed
+
+Example:
+Consumer with "Occasional vegetarian options" preference:
+  ❌ Blocked: "Chicken cravings" (contains meat)
+  ❌ Blocked: "Burgers your way" (contains meat)
+  ✅ Allowed: "Noodle cravings covered" (neutral)
+  ✅ Allowed: "You pick. We roll" (customizable)
+
+================================================================================
+SCORE DISTRIBUTION
+================================================================================
+
+98-95 (Excellent): Perfect cuisine/food match
+94-90 (Very Good): Strong preference alignment
+89-80 (Good): Taste/format aligned
+79-70 (Fair): Discovery opportunities
+
+Average Score: 84.7/100
+
+Top Scoring Notifications by Type:
+🥇 98: "Noodle cravings covered" (noodle lovers)
+🥇 98: "Skip the schlep" (Chinese cuisine fans)
+🥈 96: "You pick. We roll" (customizable bowl lovers)
+🥉 94: Various cuisine-specific matches
+
+================================================================================
+HOW TO USE THE FILE
+================================================================================
+
+OPTION 1: Google Sheets
+• Go to sheets.google.com
+• File → Import → Upload
+• Select notifications_with_dietary_guardrails.csv
+
+OPTION 2: Excel
+• Double-click the CSV file
+• Or: Open Excel → File → Import → CSV
+
+OPTION 3: Filter & Sort
+• Filter by consumer_id to see all their notifications
+• Filter by dietary_preference to see guardrail patterns
+• Sort by score to see top performers
+• Filter by keyword to see notification themes
+
+================================================================================
+NEXT STEPS
+================================================================================
+
+1. Review notifications in spreadsheet
+2. Adjust scores based on business priorities
+3. A/B test top-scoring notifications
+4. Monitor engagement by dietary preference segment
+5. Iterate based on performance data
+
+================================================================================

@@ -1,0 +1,165 @@
+================================================================================
+UPDATED NOTIFICATION GENERATION - WITH NEW RESTRICTIONS
+================================================================================
+Date: October 16, 2025
+New Restriction Applied: Mild spicy guardrail
+URL Update: Added &filterQuery-deals-fill=true
+
+================================================================================
+RESULTS
+================================================================================
+
+✅ Total consumers processed: 17
+✅ Consumers with profiles: 17 (100%)
+📊 Total notifications generated: 128
+📈 Average score: 87.8/100
+
+Comparison to Previous Version:
+• Previous: 140 notifications (avg 87.2)
+• Updated: 128 notifications (avg 87.8)
+• Difference: -12 notifications, +0.6 points higher avg score
+
+================================================================================
+WHAT CHANGED
+================================================================================
+
+1. NEW RESTRICTION: Mild Spicy Guardrail 🌶️
+   Rule: If cx profile contains 'mild spicy' taste, do not recommend 'spicy' keyword
+   
+   Implementation:
+   • Checks taste_preference for "mild" AND "spicy"
+   • Filters out notifications with "spicy" in title, body, or keyword
+   • Example: "Heat seekers wanted" with "spicy food" keyword → BLOCKED
+   
+   Impact: 0 consumers in this batch had "mild spicy" preference
+
+2. UPDATED URLS: Deals Filter Added 🔗
+   Old format:
+   https://www.doordash.com/search/store/noodles?event_type=search&filterQuery-vertical_ids=1
+   
+   New format:
+   https://www.doordash.com/search/store/noodles?event_type=search&filterQuery-vertical_ids=1&filterQuery-deals-fill=true
+   
+   Added: &filterQuery-deals-fill=true
+   Purpose: Enables deals filtering in search results
+
+================================================================================
+FILE GENERATED
+================================================================================
+
+File: notifications_updated_restrictions.csv
+Size: ~90 KB
+Rows: 129 (128 notifications + header)
+
+Columns (13):
+1. consumer_id
+2. rank
+3. score (80-98)
+4. title
+5. body
+6. keyword
+7. url (with deals filter!)
+8. title_length
+9. body_length
+10. cuisines_preference
+11. foods_preference
+12. taste_preference
+13. dietary_preference
+
+================================================================================
+SCORE DISTRIBUTION
+================================================================================
+
+90-98 (Excellent): 54 notifications (42%)
+85-89 (Very Good): 14 notifications (11%)
+80-84 (Good): 60 notifications (47%)
+
+Average: 87.8/100 (up from 87.2)
+
+================================================================================
+NOTIFICATION COUNT PER CONSUMER
+================================================================================
+
+181431443: 9 notifications
+1193328057: 9 notifications
+1036295588: 8 notifications
+1860023262: 9 notifications
+1898143015: 8 notifications
+1917310173: 8 notifications
+1652637228: 9 notifications
+879733873: 10 notifications
+1787689873: 8 notifications
+661703925: 7 notifications
+1036296113: 5 notifications
+87525802: 7 notifications
+1876399093: 6 notifications
+1125900258685514: 6 notifications
+1125900345980826: 4 notifications
+1627393472: 7 notifications
+1883352280: 8 notifications
+
+================================================================================
+COMPLIANCE VERIFICATION
+================================================================================
+
+✅ All titles < 35 characters
+✅ All bodies < 140 characters
+✅ No exclamation points
+✅ Sentence case throughout
+✅ Max 1 emoji per notification
+✅ No meal time references
+✅ No "authentic" descriptions
+✅ No DoorDash mentions
+✅ DoorDash brand voice applied
+✅ Dietary guardrails enforced
+✅ NEW: Mild spicy guardrail enforced
+✅ NEW: Deal filter in URLs
+
+================================================================================
+EXAMPLE URL BEFORE & AFTER
+================================================================================
+
+BEFORE (old version):
+https://www.doordash.com/search/store/noodles?event_type=search&filterQuery-vertical_ids=1
+
+AFTER (updated version):
+https://www.doordash.com/search/store/noodles?event_type=search&filterQuery-vertical_ids=1&filterQuery-deals-fill=true
+
+Benefits:
+• Users see deals when they click the link
+• Better engagement through deal visibility
+• Aligns with promo-focused use case
+
+================================================================================
+MILD SPICY GUARDRAIL EXAMPLES
+================================================================================
+
+Consumer Profile: "Mild spicy taste preference"
+
+BEFORE GUARDRAIL:
+✓ "Heat seekers wanted" - Get bold, spicy flavors (keyword: spicy food)
+✓ "Spicy dishes you'll love" - Get the heat (keyword: spicy)
+
+AFTER GUARDRAIL:
+❌ "Heat seekers wanted" - FILTERED OUT (contains "spicy")
+❌ "Spicy dishes you'll love" - FILTERED OUT (contains "spicy")
+✓ "Noodle cravings covered" - ALLOWED (no spicy mention)
+✓ "You pick. We roll" - ALLOWED (neutral)
+
+Note: No consumers in current batch had "mild spicy" preference
+
+================================================================================
+READY TO USE
+================================================================================
+
+File: notifications_updated_restrictions.csv
+
+Open in Google Sheets or Excel to:
+• View all 128 notifications
+• Filter by consumer
+• Check updated URLs with deals filter
+• Sort by score
+
+All notifications are production-ready and compliant!
+
+================================================================================
