@@ -1,13 +1,11 @@
 """
-DoorDash Notification Generator Module - UPDATED
+DoorDash Notification Generator Module
 
-Reusable module for generating personalized push notifications
-following DoorDash brand guidelines and dietary restrictions.
-
-Version: 1.1 - Added mild spicy guardrail and deals filter
+Version: 1.2.0 - Added pricing filter and smart deal targeting
 """
 
 import json
+import re
 from typing import List, Dict, Optional
 
 
@@ -15,12 +13,13 @@ class NotificationGenerator:
     """
     Generate personalized push notifications for DoorDash consumers.
     
-    Version 1.1 Updates:
-    - Added mild spicy guardrail (filters 'spicy' for 'mild spicy' taste profiles)
-    - Updated URLs to include &filterQuery-deals-fill=true
+    Version History:
+    - v1.0: Initial release with dietary guardrails
+    - v1.1: Added mild spicy guardrail
+    - v1.2: Added pricing filter for smart deal targeting
     """
     
-    __version__ = "1.1.0"
+    __version__ = "1.2.0"
     
     def __init__(self):
         self.brand_phrases = [
@@ -31,6 +30,34 @@ class NotificationGenerator:
             "More you time",
         ]
     
+    def extract_promo_usage(self, price_sensitivity: str) -> float:
+        """Extract promo usage percentage from price_sensitivity field"""
+        if not price_sensitivity:
+            return 0.0
+        
+        match = re.search(r'(\d+\.?\d*)%\s*promo', price_sensitivity.lower())
+        if match:
+            return float(match.group(1))
+        return 0.0
+    
+    def is_value_conscious(self, price_sensitivity: str) -> bool:
+        """Determine if consumer is value-conscious based on price sensitivity"""
+        if not price_sensitivity:
+            return False
+        
+        price_lower = price_sensitivity.lower()
+        
+        # Check for explicit labels
+        if 'value seeker' in price_lower or 'budget' in price_lower:
+            return True
+        
+        # Check promo usage
+        promo_usage = self.extract_promo_usage(price_sensitivity)
+        if promo_usage > 25:
+            return True
+        
+        return False
+    
     def passes_dietary_guardrail(self, notification: Dict, dietary_pref: str) -> bool:
         """Check if a notification respects dietary preferences."""
         if not dietary_pref or dietary_pref.lower() in ['none', 'no preference']:
@@ -39,19 +66,16 @@ class NotificationGenerator:
         dietary_lower = dietary_pref.lower()
         content = f"{notification['title']} {notification['body']} {notification['keyword']}".lower()
         
-        # Vegetarian guardrails
         if 'vegetarian' in dietary_lower:
             meat_keywords = ['meat', 'chicken', 'beef', 'pork', 'bacon', 'sausage', 'steak', 'turkey']
             if any(meat in content for meat in meat_keywords):
                 return False
         
-        # Vegan guardrails
         if 'vegan' in dietary_lower:
             animal_products = ['meat', 'chicken', 'beef', 'dairy', 'cheese', 'egg', 'milk', 'bacon', 'butter']
             if any(product in content for product in animal_products):
                 return False
         
-        # Pescatarian guardrails
         if 'pescatarian' in dietary_lower:
             meats = ['chicken', 'beef', 'pork', 'bacon', 'sausage', 'steak', 'turkey', 'lamb']
             if any(meat in content for meat in meats):
@@ -61,21 +85,15 @@ class NotificationGenerator:
     
     def passes_mild_spicy_guardrail(self, notification: Dict, taste_pref: str) -> bool:
         """
-        NEW v1.1: If taste preference contains 'mild spicy', filter out 'spicy' keyword.
-        
-        Per updated restriction: "If cx profile contains 'mild spicy' taste, 
-        do not recommend 'spicy' keyword"
+        v1.1: If taste preference contains 'mild spicy', filter out 'spicy' keyword.
         """
         if not taste_pref:
             return True
         
         taste_lower = taste_pref.lower()
         
-        # Check if profile has "mild spicy" (mild AND spicy together)
         if 'mild' in taste_lower and 'spicy' in taste_lower:
             content = f"{notification['title']} {notification['body']} {notification['keyword']}".lower()
-            
-            # Filter out anything with 'spicy'
             if 'spicy' in content:
                 return False
         
@@ -85,13 +103,11 @@ class NotificationGenerator:
         """Validate a notification against DoorDash guidelines."""
         issues = []
         
-        # Format validation
         if len(title) >= 35:
             issues.append(f"Title too long: {len(title)}/35 characters")
         if len(body) > 140:
             issues.append(f"Body too long: {len(body)}/140 characters")
         
-        # Content restrictions
         if '!' in title or '!' in body:
             issues.append("Contains exclamation points")
         if title and title[-1] in '.,:;' and title[-1] != '?':
@@ -101,17 +117,14 @@ class NotificationGenerator:
         if 'DoorDash' in title or 'DoorDash' in body:
             issues.append("Mentions DoorDash")
         
-        # Hyperbolic language
         hyperbolic = ['mouthwatering', 'scrumptious', 'tantalizing', 'tempting', 'indulge', 'savor']
         if any(word in title.lower() or word in body.lower() for word in hyperbolic):
             issues.append("Contains overly salesy language")
         
-        # Meal time inference
         meal_times = ['breakfast', 'brunch', 'lunch', 'dinner']
         if any(meal in title.lower() or meal in body.lower() for meal in meal_times):
             issues.append("Infers meal time")
         
-        # "Authentic" check
         if 'authentic' in title.lower() or 'authentic' in body.lower():
             issues.append("Uses 'authentic' descriptor")
         
@@ -135,25 +148,23 @@ class NotificationGenerator:
         taste = overall.get('taste_preference', '').lower()
         dietary = overall.get('dietary_preferences', {})
         preferred_dietary = dietary.get('preferred_dietary_preference', '')
+        price_sensitivity = overall.get('price_sensitivity', '')
         
         all_notifications = []
         
-        # Generate notifications based on profile (scores 98-80)
+        # Generate base notifications
         self._add_noodle_notifications(all_notifications, food, cuisine)
         self._add_cuisine_notifications(all_notifications, cuisine, food, taste)
+        self._add_pricing_aware_notifications(all_notifications, price_sensitivity)
         self._add_universal_notifications(all_notifications)
         
-        # Apply guardrails in order
+        # Apply guardrails
         filtered = []
         for notif in all_notifications:
-            # 1. Dietary guardrail
             if not self.passes_dietary_guardrail(notif, preferred_dietary):
                 continue
-            
-            # 2. NEW v1.1: Mild spicy guardrail
             if not self.passes_mild_spicy_guardrail(notif, taste):
                 continue
-            
             filtered.append(notif)
         
         # Filter by score and sort
@@ -247,7 +258,7 @@ class NotificationGenerator:
                 "score": 82
             })
         
-        if 'indian' in cuisine or 'curry' in food:
+        if 'indian' in cuisine:
             notifications.append({
                 "title": "Curry and more",
                 "body": "Bold Indian flavors from tikka masala to biryani, all nearby",
@@ -279,6 +290,38 @@ class NotificationGenerator:
                 "score": 80
             })
     
+    def _add_pricing_aware_notifications(self, notifications: List, price_sensitivity: str):
+        """
+        v1.2: Add deal notifications with pricing-aware scoring
+        
+        Value-conscious consumers get boosted deal notification scores
+        """
+        is_value = self.is_value_conscious(price_sensitivity)
+        
+        if is_value:
+            # Boost deal notifications for value-conscious consumers
+            notifications.append({
+                "title": "Deal dropped. You're up",
+                "body": "Save on restaurants you order from most with deals ready now",
+                "keyword": "food deals",
+                "score": 95  # Boosted score
+            })
+            
+            notifications.append({
+                "title": "$0 delivery fee",
+                "body": "Skip the fee on orders from top-rated spots near you",
+                "keyword": "free delivery",
+                "score": 93  # Boosted score
+            })
+        else:
+            # Lower score for balanced spenders (will likely be filtered out)
+            notifications.append({
+                "title": "Deal dropped. You're up",
+                "body": "Get savings on restaurants you visit most",
+                "keyword": "food deals",
+                "score": 78  # Below typical threshold
+            })
+    
     def _add_universal_notifications(self, notifications: List):
         """Add universal notifications that work for all consumers"""
         notifications.append({
@@ -292,7 +335,7 @@ class NotificationGenerator:
         """
         Generate DoorDash search URL from keyword.
         
-        Version 1.1: Now includes deals filter parameter
+        v1.1: Added deals filter parameter
         """
         encoded_keyword = keyword.replace(' ', '%20')
         return f"https://www.doordash.com/search/store/{encoded_keyword}?event_type=search&filterQuery-vertical_ids=1&filterQuery-deals-fill=true"

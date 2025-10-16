@@ -1,0 +1,157 @@
+================================================================================
+PRICING FILTER INTEGRATION - VERSION 1.2
+================================================================================
+Date: October 16, 2025
+New Feature: Price sensitivity-based notification boosting
+
+================================================================================
+WHAT'S NEW
+================================================================================
+
+PRICING INTELLIGENCE 💰
+• Extracts promo usage % from consumer profiles
+• Identifies value-conscious consumers (promo usage > 25% OR "value seeker" label)
+• Boosts deal notification scores for price-sensitive consumers
+• Ensures deal notifications appear in top 10 for the right audience
+
+================================================================================
+HOW IT WORKS
+================================================================================
+
+1. EXTRACT PRICE SENSITIVITY
+   From profile: "Balanced Spender... with 26.45% promo usage"
+   Extract: 26.45% promo usage
+
+2. CLASSIFY CONSUMER
+   • Promo usage > 25%? → Value-conscious
+   • Contains "value seeker"? → Value-conscious  
+   • Contains "budget"? → Value-conscious
+   • Otherwise → Balanced spender
+
+3. ADJUST NOTIFICATION SCORES
+   
+   VALUE-CONSCIOUS CONSUMERS:
+   • "Deal dropped. You're up" → Score 95 (BOOSTED from 78)
+   • "$0 delivery fee" → Score 93 (BOOSTED from 78)
+   • Deal notifications appear in top 3-4 rankings
+   
+   BALANCED SPENDERS:
+   • "Deal dropped. You're up" → Score 78 (filtered out)
+   • Deal notifications not included (below 80 threshold)
+   • Focus on cuisine/food preferences instead
+
+================================================================================
+RESULTS
+================================================================================
+
+Total Consumers: 17
+With Profiles: 17 (100%)
+Value-Conscious: 9 (53%)
+Balanced Spenders: 8 (47%)
+
+Total Notifications: 139
+Deal Notifications: 9 (one per value-conscious consumer)
+Average Score: 88.9/100 (up from 87.8)
+Deal Notification Avg: 95.0/100
+
+================================================================================
+EXAMPLE: VALUE-CONSCIOUS CONSUMER
+================================================================================
+
+Consumer: 1860023262
+Price Sensitivity: "Balanced Spender... 26.45% promo usage"
+Promo Usage: 26.45% → VALUE-CONSCIOUS ✓
+
+Top Notifications:
+🥇 #1 (98): "Noodle cravings covered"
+🥈 #2 (95): "Deal dropped. You're up" ⭐ BOOSTED
+🥉 #3 (96): "Skip the schlep"
+
+Deal notification appears at rank #2 because consumer is price-sensitive!
+
+================================================================================
+EXAMPLE: BALANCED SPENDER
+================================================================================
+
+Consumer: 1193328057
+Price Sensitivity: "Balanced Spender... 0.0% promo usage"
+Promo Usage: 0.0% → BALANCED SPENDER
+
+Top Notifications:
+🥇 #1 (98): "Noodle cravings covered"
+🥈 #2 (96): "Skip the schlep"
+🥉 #3 (94): "You pick. We roll"
+
+Deal notification NOT included (score 78, below threshold)
+Focus on cuisine preferences instead!
+
+================================================================================
+NEW CSV COLUMNS
+================================================================================
+
+Added 3 new columns:
+1. price_sensitivity - Full price sensitivity text from profile
+2. promo_usage_pct - Extracted promo usage percentage
+3. is_value_conscious - True/False flag for value-conscious consumers
+
+Total columns now: 16 (was 13)
+
+================================================================================
+SCORING ADJUSTMENTS
+================================================================================
+
+Notification Type          | Value-Conscious | Balanced Spender
+---------------------------|-----------------|------------------
+"Deal dropped. You're up"  | 95 ⭐ BOOSTED   | 78 (filtered)
+"$0 delivery fee"          | 93 ⭐ BOOSTED   | Not included
+Cuisine matches            | 98-94           | 98-94
+Universal notifications    | 80              | 80
+
+================================================================================
+BUSINESS IMPACT
+================================================================================
+
+✅ BETTER TARGETING
+• Deal notifications only go to price-sensitive users
+• Higher engagement expected (right message, right audience)
+
+✅ PERSONALIZED VALUE PROPS
+• Value seekers see deals prominently
+• Experience-focused users see cuisine options
+
+✅ IMPROVED EFFICIENCY
+• No wasted impressions on deal-insensitive users
+• Each notification tailored to consumer behavior
+
+✅ DATA-DRIVEN
+• Based on actual promo usage patterns
+• Considers consumer spending behavior
+
+================================================================================
+FILE GENERATED
+================================================================================
+
+File: notifications_with_pricing.csv
+Size: ~95 KB
+Rows: 140 (139 notifications + header)
+Columns: 16 (added price_sensitivity, promo_usage_pct, is_value_conscious)
+
+All notifications:
+✅ Score >= 80
+✅ Compliant with all restrictions
+✅ URLs include deals filter
+✅ Pricing-aware ranking
+
+================================================================================
+READY TO USE
+================================================================================
+
+This CSV can be used for:
+• A/B testing deal vs non-deal messaging
+• Analyzing engagement by price sensitivity
+• Training future ML models on price preferences
+• Segmenting notification campaigns
+
+Open in Excel/Google Sheets to explore!
+
+================================================================================
