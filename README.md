@@ -52,6 +52,16 @@ Output: `notifications_with_pricing_localized.csv`
 
 Localization improves relevance for Spanish/French-CA audiences, but average score remains comparable to pricing-only results due to unchanged scoring logic. Future work could include locale-aware scoring.
 
+### Locale-aware score (separate, non-ranking)
+- New column: `locale_score` (does not affect ranking)
+- Heuristics:
+  - Exact language match (es): +3
+  - French-CA match: +2
+  - English-CA variant match: +1
+  - Non-English copy shown to English user (or mismatched language): −4
+  - Truncation applied to fit 35/140 limits: −1
+- Final ranking still uses `score` only; `locale_score` is for analysis/QA.
+
 ## Prerequisites
 - Python 3.8 or higher
 - Snowflake account with credentials
