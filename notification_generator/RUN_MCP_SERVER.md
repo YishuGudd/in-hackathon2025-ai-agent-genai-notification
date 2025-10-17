@@ -6,6 +6,14 @@ Just run the notification server directly:
 
 ```bash
 cd notification_generator
+export SNOWFLAKE_ACCOUNT=DOORDASH
+export SNOWFLAKE_USER=your.name@doordash.com
+export SNOWFLAKE_AUTHENTICATOR=externalbrowser
+export SNOWFLAKE_WAREHOUSE=ADHOC
+export SNOWFLAKE_DATABASE=PRODDB
+export SNOWFLAKE_SCHEMA=PUBLIC
+export SNOWFLAKE_ROLE=YOUR_ROLE
+export GENAI_PROFILE_TABLE=PRODDB.ML.GENAI_CX_PROFILE_SHADOW  # optional override
 python notification_server.py
 ```
 
@@ -39,16 +47,7 @@ Add to your `claude_desktop_config.json`:
       "command": "python",
       "args": [
         "/full/path/to/notification_generator/notification_server.py"
-      ],
-      "env": {
-        "SNOWFLAKE_ACCOUNT": "DOORDASH",
-        "SNOWFLAKE_USER": "your.username",
-        "SNOWFLAKE_AUTHENTICATOR": "externalbrowser",
-        "SNOWFLAKE_WAREHOUSE": "ADHOC",
-        "SNOWFLAKE_DATABASE": "PRODDB",
-        "SNOWFLAKE_SCHEMA": "PUBLIC",
-        "SNOWFLAKE_ROLE": "your_role"
-      }
+      ]
     }
   }
 }
