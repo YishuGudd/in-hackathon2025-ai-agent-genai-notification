@@ -107,8 +107,9 @@ async def main():
                 conn = get_snowflake_connection()
                 cursor = conn.cursor()
                 
-                # Query profile from SHADOW table
-                query = f"SELECT CONSUMER_ID, PROFILE FROM PRODDB.ML.GENAI_CX_PROFILE_SHADOW WHERE CONSUMER_ID = {consumer_id}"
+                # Query profile from SHADOW table (default), allow override via env TABLE
+                table = os.getenv('GENAI_PROFILE_TABLE', 'PRODDB.ML.GENAI_CX_PROFILE_SHADOW')
+                query = f"SELECT CONSUMER_ID, PROFILE FROM {table} WHERE CONSUMER_ID = {consumer_id}"
                 cursor.execute(query)
                 result = cursor.fetchone()
                 
