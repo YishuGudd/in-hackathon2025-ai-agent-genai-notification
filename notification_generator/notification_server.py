@@ -28,6 +28,17 @@ from notification_generator import NotificationGenerator
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("notification-server")
 
+# Load keyword image map (case-insensitive keys)
+IMAGE_MAP_PATH = os.path.join(os.path.dirname(__file__), '..', 'keyword_image_map.json')
+KEYWORD_TO_IMAGE = {}
+try:
+    if os.path.exists(IMAGE_MAP_PATH):
+        with open(IMAGE_MAP_PATH, 'r', encoding='utf-8') as f:
+            raw_map = json.load(f)
+            KEYWORD_TO_IMAGE = {str(k).lower(): v for k, v in raw_map.items()}
+except Exception as e:
+    logger.warning(f"Failed to load keyword_image_map.json: {e}")
+
 
 async def main():
     """Main entry point for the notification server"""
@@ -130,9 +141,13 @@ async def main():
                 # Generate notifications
                 notifications = generator.generate_notifications(profile, min_score, max_count)
                 
-                # Add URLs to notifications
+                # Add URLs and image URLs
                 for notif in notifications:
-                    notif['url'] = generator.format_for_doordash_url(notif['keyword'])
+                    keyword = notif.get('keyword', '') or ''
+                    notif['url'] = generator.format_for_doordash_url(keyword)
+                    image_url = KEYWORD_TO_IMAGE.get(keyword.lower()) if keyword else None
+                    if image_url:
+                        notif['image_url'] = image_url
                     notif['title_length'] = len(notif['title'])
                     notif['body_length'] = len(notif['body'])
                 
