@@ -22,3 +22,7 @@ python-dotenv==1.0.1
 # SQL utilities
 sqlalchemy==2.0.35
 
+# MCP stdio server deps
+mcp==1.2.0
+pydantic>=2.8.0
+
