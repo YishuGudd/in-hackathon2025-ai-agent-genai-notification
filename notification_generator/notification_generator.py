@@ -1,7 +1,7 @@
 """
 DoorDash Notification Generator Module
 
-Version: 1.3.0 - Added locale-aware copy helpers (es, fr-CA, en-CA)
+Version: 1.4.0 - Updated restrictions (min_score=82, no promo phrases, short dashes only)
 """
 
 import json
@@ -19,6 +19,7 @@ class NotificationGenerator:
     - v1.1: Added mild spicy guardrail
     - v1.2: Added pricing filter for smart deal targeting
     - v1.3: Added locale-aware copy helpers (Spanish, French-CA, English-CA)
+    - v1.4: Updated restrictions (min_score=82, removed promo phrases, short dashes, no cuisine in titles, auto url+image_url)
     """
     
     __version__ = "1.4.0"
@@ -280,7 +281,7 @@ class NotificationGenerator:
     def generate_notifications(
         self, 
         profile: Dict, 
-        min_score: int = 80,
+        min_score: int = 82,
         max_count: int = 10
     ) -> List[Dict]:
         """Generate personalized notifications from a consumer profile."""
