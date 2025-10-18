@@ -6,6 +6,7 @@ Version: 1.3.0 - Added locale-aware copy helpers (es, fr-CA, en-CA)
 
 import json
 import re
+import os
 from typing import List, Dict, Optional
 
 
@@ -20,7 +21,7 @@ class NotificationGenerator:
     - v1.3: Added locale-aware copy helpers (Spanish, French-CA, English-CA)
     """
     
-    __version__ = "1.3.0"
+    __version__ = "1.4.0"
     
     def __init__(self):
         self.brand_phrases = [
@@ -117,6 +118,17 @@ class NotificationGenerator:
             },
         }
 
+        # Optional: keyword -> image URL mapping for enriching outputs
+        self.keyword_to_image: Dict[str, str] = {}
+        try:
+            mapping_path = os.path.join(os.path.dirname(__file__), '..', 'keyword_image_map.json')
+            if os.path.exists(mapping_path):
+                with open(mapping_path, 'r', encoding='utf-8') as f:
+                    raw_map = json.load(f)
+                    self.keyword_to_image = {str(k).lower(): str(v) for k, v in raw_map.items()}
+        except Exception:
+            self.keyword_to_image = {}
+
     def _detect_locale_key(self, dd_user_locale: str, language: str) -> str:
         """Return canonical locale key: 'es', 'fr-CA', 'en-CA', or 'en-US' default."""
         loc = (dd_user_locale or "").lower()
@@ -141,7 +153,7 @@ class NotificationGenerator:
             body_ca = body
             body_ca = body_ca.replace("favorites", "favourites").replace("flavors", "flavours")
             title_ca = title
-            return {"title": title_ca, "body": body_ca, "locale_applied": locale_key}
+            return {"title": title_ca, "body": body_ca, "locale_applied": locale_key, "was_truncated": False}
 
         translations_t = self.title_translations.get(locale_key, {})
         translations_b = self.body_translations.get(locale_key, {})
@@ -149,13 +161,16 @@ class NotificationGenerator:
         localized_title = translations_t.get(title, title)
         localized_body = translations_b.get(body, body)
 
-        # Enforce hard limits
+        # Enforce hard limits and record truncation
+        truncated = False
         if len(localized_title) >= 35:
             localized_title = localized_title[:34]
+            truncated = True
         if len(localized_body) > 140:
             localized_body = localized_body[:140]
+            truncated = True
 
-        return {"title": localized_title, "body": localized_body, "locale_applied": locale_key}
+        return {"title": localized_title, "body": localized_body, "locale_applied": locale_key, "was_truncated": truncated}
     
     def extract_promo_usage(self, price_sensitivity: str) -> float:
         """Extract promo usage percentage from price_sensitivity field"""
@@ -297,15 +312,33 @@ class NotificationGenerator:
         # Filter by score and sort
         filtered = [n for n in filtered if n['score'] >= min_score]
         filtered.sort(key=lambda x: x['score'], reverse=True)
+        top = filtered[:max_count]
         
-        return filtered[:max_count]
+        # Enrich with URL and image URL for downstream consumers
+        for n in top:
+            kw = (n.get('keyword') or '').strip()
+            if kw:
+                n['url'] = self.format_for_doordash_url(kw)
+                n['image_url'] = self.keyword_to_image.get(kw.lower()) if self.keyword_to_image else None
+            else:
+                n['url'] = None
+                n['image_url'] = None
+        
+        return top
     
     def _add_noodle_notifications(self, notifications: List, food: str, cuisine: str):
         """Add noodle-related notifications"""
         if 'noodle' in food or 'noodle' in cuisine:
+            body_templates = [
+                "🍜 Hot bowls and hand-pulled options ready from spots you'll love",
+                "🍜 Fresh noodles delivered fast from places you'll reorder",
+                "🍜 Hand-pulled noodles and hot bowls, made easy",
+            ]
+            body_text = self._choose_variant(body_templates, 'noodles')
+            body_text = self._ensure_keyword_in_body('noodles', body_text)
             notifications.append({
                 "title": "Noodle cravings covered",
-                "body": "🍜 Hot bowls and hand-pulled options ready from spots you'll love",
+                "body": body_text,
                 "keyword": "noodles",
                 "score": 98
             })
@@ -314,105 +347,196 @@ class NotificationGenerator:
         """Add cuisine-specific notifications"""
         
         if 'chinese' in cuisine:
+            body_templates = [
+                "Get dumplings, rice dishes, and bold flavors delivered from top spots",
+                "Top Chinese spots near you with dumplings and rice dishes",
+                "Bold Chinese flavors from nearby favorites, delivered",
+            ]
+            body_text = self._choose_variant(body_templates, 'Chinese food')
+            body_text = self._ensure_keyword_in_body('Chinese food', body_text)
             notifications.append({
                 "title": "Skip the schlep",
-                "body": "Get dumplings, rice dishes, and bold flavors delivered from top spots",
+                "body": body_text,
                 "keyword": "Chinese food",
                 "score": 96
             })
         
         if 'bowl' in food or 'rice' in food or 'poke' in food or 'hawaiian' in cuisine:
+            body_templates = [
+                "Build your perfect bowl with fresh ingredients from places nearby",
+                "Custom rice bowls with fresh picks from spots around you",
+                "Fresh rice bowls, built your way and delivered",
+            ]
+            body_text = self._choose_variant(body_templates, 'rice bowls')
+            body_text = self._ensure_keyword_in_body('rice bowls', body_text)
             notifications.append({
                 "title": "You pick. We roll",
-                "body": "Build your perfect bowl with fresh ingredients from places nearby",
+                "body": body_text,
                 "keyword": "rice bowls",
                 "score": 94
             })
         
         if 'spicy' in taste or 'bold' in taste:
+            body_templates = [
+                "Get bold flavors from restaurants that bring it",
+                "Spicy picks ready to deliver from places you’ll like",
+                "Turn up the heat with spicy food near you",
+            ]
+            body_text = self._choose_variant(body_templates, 'spicy food')
+            body_text = self._ensure_keyword_in_body('spicy food', body_text)
             notifications.append({
                 "title": "Heat seekers wanted",
-                "body": "Get bold flavors from restaurants that bring it",
+                "body": body_text,
                 "keyword": "spicy food",
                 "score": 92
             })
         
         if 'mexican' in cuisine or 'latin' in cuisine:
+            body_templates = [
+                "Fresh tacos, burritos, and more ready to order from nearby favorites",
+                "Tacos and burritos from top Mexican spots near you",
+                "Mexican classics, delivered from places you’ll reorder",
+            ]
+            body_text = self._choose_variant(body_templates, 'Mexican')
+            body_text = self._ensure_keyword_in_body('Mexican', body_text)
             notifications.append({
                 "title": "Taco time",
-                "body": "Fresh tacos, burritos, and more ready to order from nearby favorites",
+                "body": body_text,
                 "keyword": "Mexican",
                 "score": 90
             })
         
         if 'pizza' in food or 'italian' in cuisine:
+            body_templates = [
+                "Thin crust to deep dish, they're all just a tap away",
+                "Hot pizza from top spots, just a tap away",
+                "Classic and new pizza picks delivered fast",
+            ]
+            body_text = self._choose_variant(body_templates, 'pizza')
+            body_text = self._ensure_keyword_in_body('pizza', body_text)
             notifications.append({
                 "title": "Pizza. Done",
-                "body": "Thin crust to deep dish, they're all just a tap away",
+                "body": body_text,
                 "keyword": "pizza",
                 "score": 88
             })
         
         if 'burger' in food or 'sandwich' in food:
+            body_templates = [
+                "Classic or loaded, get them delivered hot and ready",
+                "Stacked burgers, cooked right and delivered",
+                "Burgers your way, hot and ready at your door",
+            ]
+            body_text = self._choose_variant(body_templates, 'burgers')
+            body_text = self._ensure_keyword_in_body('burgers', body_text)
             notifications.append({
                 "title": "Burgers your way",
-                "body": "Classic or loaded, get them delivered hot and ready",
+                "body": body_text,
                 "keyword": "burgers",
                 "score": 86
             })
         
         if 'japanese' in cuisine or 'sushi' in food or 'ramen' in food:
+            body_templates = [
+                "Fresh rolls and rich broths from spots you'll want to reorder",
+                "Sushi and ramen from nearby favorites, delivered",
+                "Rolls and ramen, prepped fast from top Japanese spots",
+            ]
+            body_text = self._choose_variant(body_templates, 'Japanese food')
+            body_text = self._ensure_keyword_in_body('Japanese food', body_text)
             notifications.append({
                 "title": "Sushi and ramen ready",
-                "body": "Fresh rolls and rich broths from spots you'll want to reorder",
+                "body": body_text,
                 "keyword": "Japanese food",
                 "score": 84
             })
         
         if 'thai' in cuisine:
+            body_templates = [
+                "Get bold Thai curries and stir-fries delivered in 30 min",
+                "Thai curries and stir-fries, ready to deliver",
+                "Thai flavors from nearby spots, delivered quick",
+            ]
+            body_text = self._choose_variant(body_templates, 'Thai food')
+            body_text = self._ensure_keyword_in_body('Thai food', body_text)
             notifications.append({
                 "title": "Curry cravings",
-                "body": "Get bold Thai curries and stir-fries delivered in 30 min",
+                "body": body_text,
                 "keyword": "Thai food",
                 "score": 82
             })
         
         if 'vietnamese' in cuisine or 'pho' in food:
+            body_templates = [
+                "Fresh Vietnamese flavors from noodle soups to banh mi sandwiches",
+                "Pho and banh mi from nearby favorites, delivered",
+                "Vietnamese picks like pho and banh mi, made easy",
+            ]
+            body_text = self._choose_variant(body_templates, 'Vietnamese food')
+            body_text = self._ensure_keyword_in_body('Vietnamese food', body_text)
             notifications.append({
                 "title": "Pho and more",
-                "body": "Fresh Vietnamese flavors from noodle soups to banh mi sandwiches",
+                "body": body_text,
                 "keyword": "Vietnamese food",
                 "score": 82
             })
         
         if 'indian' in cuisine:
+            body_templates = [
+                "Bold Indian flavors from tikka masala to biryani, all nearby",
+                "Biryani and tikka masala from top Indian spots",
+                "Indian favorites delivered from places you’ll reorder",
+            ]
+            body_text = self._choose_variant(body_templates, 'Indian food')
+            body_text = self._ensure_keyword_in_body('Indian food', body_text)
             notifications.append({
                 "title": "Curry and more",
-                "body": "Bold Indian flavors from tikka masala to biryani, all nearby",
+                "body": body_text,
                 "keyword": "Indian food",
                 "score": 82
             })
         
         if 'korean' in cuisine:
+            body_templates = [
+                "From bibimbap to Korean fried chicken, flavors you'll love",
+                "Bibimbap and Korean fried chicken, delivered hot",
+                "Korean favorites near you, ready to deliver",
+            ]
+            body_text = self._choose_variant(body_templates, 'Korean food')
+            body_text = self._ensure_keyword_in_body('Korean food', body_text)
             notifications.append({
-                "title": "Korean favorites nearby",
-                "body": "From bibimbap to Korean fried chicken, flavors you'll love",
+                "title": "Favorites nearby",
+                "body": body_text,
                 "keyword": "Korean food",
                 "score": 82
             })
         
         if 'mediterranean' in cuisine or 'greek' in cuisine:
+            body_templates = [
+                "Fresh gyros, falafel, and hummus from spots worth reordering",
+                "Mediterranean bowls and plates from nearby favorites",
+                "Gyros, falafel, hummus - Mediterranean picks delivered",
+            ]
+            body_text = self._choose_variant(body_templates, 'Mediterranean food')
+            body_text = self._ensure_keyword_in_body('Mediterranean food', body_text)
             notifications.append({
-                "title": "Mediterranean picks",
-                "body": "Fresh gyros, falafel, and hummus from spots worth reordering",
+                "title": "Fresh picks nearby",
+                "body": body_text,
                 "keyword": "Mediterranean food",
                 "score": 82
             })
         
         if 'salad' in food or 'healthy' in food:
+            body_templates = [
+                "Build your perfect meal with options that keep it light",
+                "Light and fresh options ready to go",
+                "Healthy picks you can customize and deliver",
+            ]
+            body_text = self._choose_variant(body_templates, 'healthy food')
+            body_text = self._ensure_keyword_in_body('healthy food', body_text)
             notifications.append({
                 "title": "Fresh bowls nearby",
-                "body": "Build your perfect meal with options that keep it light",
+                "body": body_text,
                 "keyword": "healthy food",
                 "score": 80
             })
@@ -426,25 +550,30 @@ class NotificationGenerator:
         is_value = self.is_value_conscious(price_sensitivity)
         
         if is_value:
-            # Boost deal notifications for value-conscious consumers
+            # Boost deal notifications for value-conscious consumers (avoid specific promo phrases)
+            body_templates_deals = [
+                "Save on restaurants you order from most with deals ready now",
+                "Deals you’ll actually use from places you reorder",
+            ]
+            body_text_deals = self._choose_variant(body_templates_deals, 'food deals')
+            body_text_deals = self._ensure_keyword_in_body('food deals', body_text_deals)
             notifications.append({
                 "title": "Deal dropped. You're up",
-                "body": "Save on restaurants you order from most with deals ready now",
+                "body": body_text_deals,
                 "keyword": "food deals",
                 "score": 95  # Boosted score
             })
-            
-            notifications.append({
-                "title": "$0 delivery fee",
-                "body": "Skip the fee on orders from top-rated spots near you",
-                "keyword": "free delivery",
-                "score": 93  # Boosted score
-            })
         else:
             # Lower score for balanced spenders (will likely be filtered out)
+            body_templates_deals_low = [
+                "Get savings on restaurants you visit most",
+                "Deals available from places you visit",
+            ]
+            body_text_deals_low = self._choose_variant(body_templates_deals_low, 'food deals')
+            body_text_deals_low = self._ensure_keyword_in_body('food deals', body_text_deals_low)
             notifications.append({
                 "title": "Deal dropped. You're up",
-                "body": "Get savings on restaurants you visit most",
+                "body": body_text_deals_low,
                 "keyword": "food deals",
                 "score": 78  # Below typical threshold
             })
@@ -453,7 +582,7 @@ class NotificationGenerator:
         """Add universal notifications that work for all consumers"""
         notifications.append({
             "title": "Your go-tos are here",
-            "body": "Reorder favorites or find something new worth trying",
+            "body": self._ensure_keyword_in_body('restaurants', "Reorder favorites or find something new worth trying"),
             "keyword": "restaurants",
             "score": 80
         })
@@ -466,3 +595,31 @@ class NotificationGenerator:
         """
         encoded_keyword = keyword.replace(' ', '%20')
         return f"https://www.doordash.com/search/store/{encoded_keyword}?event_type=search&filterQuery-vertical_ids=1&filterQuery-deals-fill=true"
+
+    # --- Helpers for diversity and keyword inclusion ---
+    def _choose_variant(self, templates: List[str], keyword: str) -> str:
+        if not templates:
+            return ''
+        idx = sum(ord(c) for c in (keyword or '')) % len(templates)
+        return templates[idx]
+
+    def _ensure_keyword_in_body(self, keyword: str, body: str) -> str:
+        if not keyword:
+            return body
+        # if already present (case-insensitive), return
+        if keyword.lower() in (body or '').lower():
+            return body
+        # try appending with a short separator (use short dash, avoid long dash)
+        sep = " - "
+        addition = sep + keyword
+        if len(body) + len(addition) <= 140:
+            return body + addition
+        # fallback to simple space
+        addition = " " + keyword
+        if len(body) + len(addition) <= 140:
+            return body + addition
+        # final fallback: truncate to fit
+        max_len = 140 - (len(keyword) + 1)
+        if max_len > 0:
+            return body[:max_len].rstrip() + " " + keyword
+        return body  # as-is if pathological
